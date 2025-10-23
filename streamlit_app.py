@@ -2,7 +2,7 @@ import streamlit as st
 import requests
 
 # 🧩 Whisk API endpoint (replace if different)
-WHISK_API_URL = "https://api.whisk.ai/v1/images/generate"
+WHISK_API_URL = "https://labs.google/fx/tools/whisk"
 
 # --- Function to handle user login ---
 def whisk_login():
