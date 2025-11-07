@@ -6,7 +6,7 @@ import time  # for animation
 # Set page configuration with a romantic icon
 st.set_page_config(page_title="Tra 💖 Da Saving💍", page_icon="💖", layout="centered")
 
-# --- Custom Styling for Cuteness (Light Lavender/White Card Theme) ---
+# --- Custom Styling for Cuteness (Floating Card on Light Lavender Theme) ---
 st.markdown("""
 <style>
     /* 1. Outer Background - Light Lavender/Purple */
@@ -14,15 +14,7 @@ st.markdown("""
         background: #F5EEF8; /* Very soft lavender/purple */
     }
 
-    /* 2. Main Content Card (The large white area holding the app) */
-    .main-content-card {
-        background-color: #FFFFFF;
-        padding: 30px;
-        border-radius: 15px;
-        box-shadow: 0 0 25px rgba(0, 0, 0, 0.1); /* Soft overall shadow */
-        max-width: 700px; 
-        margin: 0 auto; 
-    }
+    /* 2. Main Content Card (REMOVED: The large white area holding the app) */
     
     /* Main Header Styling */
     .cute-header {
@@ -38,13 +30,14 @@ st.markdown("""
         border-left: 5px solid #FFC0CB; /* Pink accent line */
         padding-left: 10px;
     }
-    /* General input/container styling - now relying on shadow for depth */
+    /* General input/container styling - Individual components now look like cards */
     .stNumberInput, .stDateInput, .stRadio, .stMetric, .stDataFrame, .stInfo {
         border-radius: 12px !important;
-        background-color: #F8F8FF; /* Very faint off-white background for components */
-        padding: 10px;
-        box-shadow: 0 4px 8px rgba(199, 21, 133, 0.05); /* Lighter soft shadow */
-        margin-bottom: 15px;
+        background-color: #FFFFFF; /* White background for individual components */
+        padding: 15px; /* Increased padding slightly for better card look */
+        box-shadow: 0 4px 12px rgba(199, 21, 133, 0.1); /* Slightly deeper soft shadow */
+        margin-bottom: 20px; /* Increased margin for separation */
+        border: 1px solid #FFC0CB; /* Soft border */
     }
     /* Info box styling */
     .stAlert {
@@ -112,9 +105,6 @@ if "goal_amount" not in st.session_state or "goal_date" not in st.session_state:
     st.session_state.goal_amount = saved_goal
     st.session_state.goal_date = saved_date
 
-# --- START MAIN CONTENT CARD WRAPPER ---
-st.markdown('<div class="main-content-card">', unsafe_allow_html=True)
-
 # --- UI HEADER (Now using the cute-header class) ---
 st.markdown("<h1 class='cute-header'>💖 Our Dream Wedding Fund 💍</h1>", unsafe_allow_html=True)
 
@@ -174,6 +164,7 @@ def show_progress_bar(placeholder, progress):
         height: 30px;
         border: 2px solid #FFC0CB; /* Light Pink border */
         overflow: hidden;
+        margin-bottom: 20px; /* Added margin here */
     '>
         <div style='
             width: {percent}%;
@@ -269,6 +260,3 @@ if st.button("💔 Reset Everything (Use with caution!)"):
     st.session_state.df = pd.DataFrame(columns=["date", "contributor", "amount"])
     save_data(st.session_state.df)
     st.warning("All history cleared! Please refresh the page to restart your beautiful journey.")
-
-# --- END MAIN CONTENT CARD WRAPPER ---
-st.markdown('</div>', unsafe_allow_html=True)
