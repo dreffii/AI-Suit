@@ -311,7 +311,10 @@ if goal_amount != st.session_state.goal_amount or goal_date != st.session_state.
 
 # --- Calculation Function ---
 def update_progress():
-    today = date.today()
+    # --- FIX: Get today's date based on the Phnom Penh timezone for accurate countdown ---
+    today = datetime.now(PHNOM_PENH_TZ).date() 
+    # -----------------------------------------------------------------------------------
+    
     # Ensure goal_date is a date object for subtraction
     if isinstance(st.session_state.goal_date, datetime):
         goal_date_obj = st.session_state.goal_date.date()
@@ -409,9 +412,8 @@ amount = st.number_input("Love Deposit Amount ($)", min_value=0.01, step=10.0)
 if st.button("💖 Add Love Deposit"):
     old_balance = st.session_state.current_balance
     
-    # --- CHANGE START: Use Phnom Penh localized time ---
+    # Use Phnom Penh localized time for the deposit timestamp
     phnom_penh_now = datetime.now(PHNOM_PENH_TZ)
-    # --- CHANGE END ---
     
     new_row = pd.DataFrame({
         # Record the localized time (without timezone info in the string for simplicity)
