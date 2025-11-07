@@ -251,11 +251,10 @@ else:
         "amount": "Amount ($)"
     })
     
-    # FIX: Wrap st.dataframe in a single column to ensure it inherits the same padding/margin 
-    # structure as the columns used for the metrics, guaranteeing alignment.
-    df_col, = st.columns([1])
-    with df_col:
-        st.dataframe(display_df, use_container_width=True)
+    # FIX: Removed the single-column wrapper. Streamlit's default behavior for a top-level 
+    # widget combined with use_container_width=True often yields better alignment 
+    # when following st.columns elements.
+    st.dataframe(display_df, use_container_width=True)
 
 # --- Clear Option ---
 st.markdown("---")
