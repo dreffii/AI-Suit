@@ -1,7 +1,7 @@
 import streamlit as st
 import pandas as pd
 from datetime import date, datetime
-import time  # for progress bar animation
+import time  # for animation
 
 st.set_page_config(page_title="Wedding Savings Tracker", page_icon="💍", layout="centered")
 
@@ -70,25 +70,56 @@ def update_progress():
 
 update_progress()
 
+# --- Custom Gradient Progress Bar ---
+def display_progress_bar(progress):
+    percent = int(progress * 100)
+    # Gradient: pink (#FF9AA2) to purple (#9A6A8D)
+    start_color = (255, 154, 162)  # pink
+    end_color = (154, 106, 141)    # purple
+    r = int(start_color[0] + (end_color[0] - start_color[0]) * progress)
+    g = int(start_color[1] + (end_color[1] - start_color[1]) * progress)
+    b = int(start_color[2] + (end_color[2] - start_color[2]) * progress)
+    color = f"rgb({r},{g},{b})"
+    
+    bar_html = f"""
+    <div style="background-color:#eee; border-radius:15px; padding:3px; width:100%;">
+        <div style="
+            width:{percent}%;
+            background: linear-gradient(to right, #FF9AA2, #9A6A8D);
+            background-color:{color};
+            text-align:center;
+            padding:5px 0;
+            border-radius:10px;
+            color:white;
+            font-weight:bold;">
+            {percent}%
+        </div>
+    </div>
+    """
+    st.markdown(bar_html, unsafe_allow_html=True)
+
 # --- Display Progress ---
 st.markdown(f"### ⏳ {st.session_state.days_remaining} days to go!")
-progress_bar = st.progress(st.session_state.progress)
+progress_placeholder = st.empty()
 balance_metric = st.empty()
+display_progress_bar(st.session_state.progress)
 balance_metric.metric("💵 Current Balance", f"${st.session_state.current_balance:,.2f}")
 st.metric("🎯 Goal", f"${st.session_state.goal_amount:,.2f}")
 st.info(f"Recommended monthly save: ${st.session_state.recommended_monthly:,.2f}")
 
-# --- Animate Progress Function ---
+# --- Animate Custom Progress Bar ---
 def animate_progress(old_balance, new_balance):
     old_progress = min(1.0, old_balance / st.session_state.goal_amount)
     new_progress = min(1.0, new_balance / st.session_state.goal_amount)
     steps = 20
     for i in range(1, steps + 1):
         interp_progress = old_progress + (new_progress - old_progress) * i / steps
-        progress_bar.progress(interp_progress)
+        progress_placeholder.empty()
+        display_progress_bar(interp_progress)
         balance_metric.metric("💵 Current Balance", f"${st.session_state.current_balance:,.2f}")
         time.sleep(0.02)
-    progress_bar.progress(new_progress)
+    progress_placeholder.empty()
+    display_progress_bar(new_progress)
     balance_metric.metric("💵 Current Balance", f"${st.session_state.current_balance:,.2f}")
 
 # --- Contribution Input ---
