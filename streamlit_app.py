@@ -135,7 +135,7 @@ def save_pin(pin_code):
     pin_df = pd.DataFrame({"pin_code": [pin_code]})
     pin_df.to_excel(PIN_FILE, index=False)
 
-# --- NEW: Delete PIN function ---
+# --- Delete PIN function ---
 def delete_pin():
     """Deletes the PIN file to reset the PIN."""
     try:
@@ -149,6 +149,41 @@ def delete_pin():
         print(f"Error resetting PIN file: {e}")
         return False
 
+# --- Callback function to handle login submission (used by Enter key and button) ---
+def handle_login_submit(input_key, current_pin):
+    input_pin = st.session_state[input_key]
+    RESET_CODE = "330533"
+
+    if input_pin == RESET_CODE:
+        delete_pin()
+        st.session_state.logged_in = False
+        st.success("🔒 PIN successfully reset! Please set a new 4-digit PIN below.")
+        # Need to use a slight delay or rerun immediately for the visual change
+        # Streamlit will naturally rerun after the success message on the next interaction
+    
+    elif current_pin is None:
+        # Handling initial PIN setup submission
+        if input_pin and len(input_pin) == 4 and input_pin.isdigit():
+            save_pin(input_pin)
+            st.session_state.logged_in = True
+        else:
+            st.error("Please enter a valid 4-digit numeric PIN.")
+            st.session_state.logged_in = False
+
+    elif len(input_pin) == 4 and input_pin == current_pin:
+        # Handling normal login
+        st.session_state.logged_in = True
+    
+    else:
+        st.error("Incorrect Love PIN or invalid code. Try again!")
+        st.session_state.logged_in = False
+
+    # Force rerun if logged in status has changed (e.g., login success or pin reset)
+    # The button click usually forces a rerun, but the on_change might need it if state changes
+    if st.session_state.logged_in != st.session_state.get('prev_logged_in_state', False):
+        st.session_state.prev_logged_in_state = st.session_state.logged_in
+        st.rerun()
+
 
 # --- Initialize session state ---
 if "df" not in st.session_state:
@@ -160,7 +195,6 @@ if "goal_amount" not in st.session_state or "goal_date" not in st.session_state:
     st.session_state.goal_date = saved_date
     
 if "logged_in" not in st.session_state:
-    # Set to True initially if no PIN is set, or if we need to show the setup screen
     st.session_state.logged_in = False
     
 # --- Authentication Logic ---
@@ -175,16 +209,16 @@ def login_app():
         # --- PIN Setup Screen ---
         st.subheader("Set Up Your Love PIN (4-digit)")
         
-        # Use st.text_input with type='password' for hidden input
-        new_pin = st.text_input("Choose a 4-digit PIN", type="password", max_chars=4, key="new_pin_input")
+        # Pass the callback function to on_change
+        new_pin = st.text_input("Choose a 4-digit PIN", 
+                                type="password", 
+                                max_chars=4, 
+                                key="new_pin_input",
+                                on_change=handle_login_submit,
+                                args=("new_pin_input", None)) # Pass None for current_pin during setup
         
         if st.button("🔐 Save PIN and Enter App"):
-            if new_pin and len(new_pin) == 4 and new_pin.isdigit():
-                save_pin(new_pin)
-                st.session_state.logged_in = True
-                st.rerun() # Rerun to start the main app content
-            else:
-                st.error("Please enter a valid 4-digit numeric PIN.")
+            handle_login_submit("new_pin_input", None)
         
         st.markdown("<p style='text-align: center; color: #800080; margin-top: 20px;'>*This PIN will protect access to your budget tracker.*</p>", unsafe_allow_html=True)
         
@@ -192,29 +226,19 @@ def login_app():
         # --- PIN Login Screen (Modified for Reset Code) ---
         st.subheader("Enter Your Love PIN or Reset Code")
         
-        # Increased max_chars to 6 to allow for the special reset code '330533'
-        RESET_CODE = "330533"
-        input_pin = st.text_input("Love PIN", type="password", max_chars=6, key="login_pin_input")
+        # Pass the callback function to on_change
+        input_pin = st.text_input("Love PIN", 
+                                  type="password", 
+                                  max_chars=6, 
+                                  key="login_pin_input",
+                                  on_change=handle_login_submit,
+                                  args=("login_pin_input", current_pin))
         
         if st.button("💖 Unlock Fund"):
-            
-            # 1. Check for the Special Reset Code
-            if input_pin == RESET_CODE:
-                delete_pin()
-                st.success("🔒 PIN successfully reset! Please set a new 4-digit PIN below.")
-                st.session_state.logged_in = False # Force rerender back to setup screen
-                st.rerun()
+            handle_login_submit("login_pin_input", current_pin)
 
-            # 2. Check for Normal 4-Digit PIN Login
-            elif len(input_pin) == 4 and input_pin == current_pin:
-                st.session_state.logged_in = True
-                st.rerun() 
-            
-            # 3. Invalid Input
-            else:
-                st.error("Incorrect Love PIN or invalid code. Try again!")
-        
         # Update the helper text to mention the reset code
+        RESET_CODE = "330533"
         st.markdown(
             f"<p style='text-align: center; color: #800080; margin-top: 20px;'>"
             f"*If you forget your PIN, enter the 6-digit reset code **{RESET_CODE}** above.*"
