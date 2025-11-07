@@ -10,9 +10,9 @@ st.set_page_config(page_title="Tra 💖 Da Saving💍", page_icon="💖", layout
 
 # --- Telegram Configuration (REPLACE THESE WITH YOUR ACTUAL VALUES) ---
 # 1. Get your Bot Token from BotFather on Telegram.
-TELEGRAM_BOT_TOKEN = "7188054455:AAFSpulklwuVqrZ84LXDnhOwv3Mi0OOf9zA" 
+TELEGRAM_BOT_TOKEN = "8187368929:AAHFoCQIATHz3ymLvotteHCLTFRW0jrlNK8" 
 # 2. Get your Chat ID by sending a message to your bot and checking the API response: 
-# https://api.telegram.org/bot<7188054455:AAFSpulklwuVqrZ84LXDnhOwv3Mi0OOf9zA>/getUpdates
+# https://api.telegram.org/bot<8187368929:AAHFoCQIATHz3ymLvotteHCLTFRW0jrlNK8>/getUpdates
 TELEGRAM_CHAT_ID = "685555878" 
 # -----------------------------------------------------------------------
 
