@@ -28,8 +28,10 @@ st.markdown("""
         border-left: 5px solid #FFC0CB; /* Pink accent line */
         padding-left: 10px;
     }
+    
     /* General input/container styling - Individual components now look like cards */
-    .stNumberInput, .stDateInput, .stRadio, .stMetric, .stInfo, .stDataFrame {
+    /* NOTE: stDataFrame has been removed from this list to apply specialized styling below */
+    .stNumberInput, .stDateInput, .stRadio, .stMetric, .stInfo {
         border-radius: 12px !important;
         background-color: #FFFFFF; /* White background for individual components */
         padding: 15px; /* Increased padding slightly for better card look */
@@ -37,6 +39,7 @@ st.markdown("""
         margin-bottom: 20px; /* Increased margin for separation */
         border: 1px solid #FFC0CB; /* Soft border */
     }
+    
     /* Info box styling */
     .stAlert {
         border-radius: 12px !important;
@@ -58,6 +61,27 @@ st.markdown("""
         color: white;
         transform: translateY(-2px);
     }
+    
+    /* --- FIX FOR DATAFRAME ALIGNMENT --- */
+    /* Target the parent container of the dataframe widget specifically for card styling */
+    .stDataFrame {
+        /* Apply card styling */
+        border-radius: 12px !important;
+        background-color: #FFFFFF;
+        box-shadow: 0 4px 12px rgba(199, 21, 133, 0.1);
+        margin-bottom: 20px;
+        border: 1px solid #FFC0CB;
+        
+        /* Override default internal padding that caused misalignment */
+        padding: 0 !important;
+        overflow: hidden; /* Ensures borders are rounded correctly */
+    }
+
+    /* Apply internal padding to the specific area where the table content starts */
+    .stDataFrame .stDataFrame-base {
+        padding: 15px !important; /* Matches the 15px used in other card components */
+    }
+
 </style>
 """, unsafe_allow_html=True)
 
@@ -251,9 +275,7 @@ else:
         "amount": "Amount ($)"
     })
     
-    # FIX: Removed the single-column wrapper. Streamlit's default behavior for a top-level 
-    # widget combined with use_container_width=True often yields better alignment 
-    # when following st.columns elements.
+    # Render the dataframe with container width for responsiveness
     st.dataframe(display_df, use_container_width=True)
 
 # --- Clear Option ---
