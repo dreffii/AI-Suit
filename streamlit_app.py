@@ -14,6 +14,8 @@ st.markdown("""
         background: #F5EEF8; /* Very soft lavender/purple */
     }
 
+    /* 2. Main Content Card (REMOVED: The large white area holding the app) */
+    
     /* Main Header Styling */
     .cute-header {
         text-align: center;
@@ -29,8 +31,7 @@ st.markdown("""
         padding-left: 10px;
     }
     /* General input/container styling - Individual components now look like cards */
-    .stNumberInput, .stDateInput, .stRadio, .stMetric, .stInfo, .stAlert, 
-    .dataframe-card { /* Custom class for the data table container */
+    .stNumberInput, .stDateInput, .stRadio, .stMetric, .stDataFrame, .stInfo {
         border-radius: 12px !important;
         background-color: #FFFFFF; /* White background for individual components */
         padding: 15px; /* Increased padding slightly for better card look */
@@ -38,16 +39,6 @@ st.markdown("""
         margin-bottom: 20px; /* Increased margin for separation */
         border: 1px solid #FFC0CB; /* Soft border */
     }
-    
-    /* FIX: Removing styling from st.dataframe's internal blocks to prevent double-boxing, 
-       as the parent container (.dataframe-card) now handles the styling. */
-    .stDataFrame {
-        padding: 0 !important;
-        border: none !important;
-        box-shadow: none !important;
-        background-color: transparent !important;
-    }
-
     /* Info box styling */
     .stAlert {
         border-radius: 12px !important;
@@ -115,7 +106,7 @@ if "goal_amount" not in st.session_state or "goal_date" not in st.session_state:
     st.session_state.goal_date = saved_date
 
 # --- UI HEADER (Now using the cute-header class) ---
-st.markdown("<h1 class='cute-header'>💖 Our Dream Wedding Fund 💍</h1>", unsafe_allow_html=True)
+st.markdown("<h1 class='cute-header'>💖 Our Wedding Fund 💍</h1>", unsafe_allow_html=True)
 
 # --- Goal Section ---
 st.subheader("1️⃣ Set Our Dream Goal")
@@ -199,25 +190,13 @@ if st.session_state.remaining <= 0 and st.session_state.days_remaining >= 0:
 
 progress_placeholder = st.empty()
 show_progress_bar(progress_placeholder, st.session_state.progress)
+balance_metric = st.empty()
+balance_metric.metric("✨ Current Balance", f"${st.session_state.current_balance:,.2f}", delta_color="normal")
+st.metric("🎯 Dream Goal", f"${st.session_state.goal_amount:,.2f}")
 
-# --- Grouping the three main metrics (Current Balance, Goal, Suggested) into 3 equal columns ---
-col_bal, col_goal, col_suggest = st.columns(3)
+if st.session_state.remaining > 0 and st.session_state.days_remaining > 0:
+    st.info(f"💌 Suggested Monthly Love Deposit: **${st.session_state.recommended_monthly:,.2f}**")
 
-with col_bal:
-    balance_metric = st.empty()
-    # We use empty() here to allow animation in update_progress, but the metric is displayed below
-    balance_metric.metric("✨ Current Balance", f"${st.session_state.current_balance:,.2f}", delta_color="normal")
-
-with col_goal:
-    st.metric("🎯 Dream Goal", f"${st.session_state.goal_amount:,.2f}")
-
-with col_suggest:
-    if st.session_state.remaining > 0 and st.session_state.days_remaining > 0:
-        # Use a metric to make it look like the other two cards
-        st.metric("💌 Monthly Deposit", f"${st.session_state.recommended_monthly:,.2f}")
-    else:
-        # Placeholder metric if the goal is already reached or date passed
-        st.metric("💌 Monthly Deposit", "N/A")
 
 # --- Animate Progress Bar ---
 def animate_progress(old_balance, new_balance):
@@ -267,20 +246,13 @@ st.subheader("3️⃣ Our Funding Journey")
 if st.session_state.df.empty:
     st.info("The journey begins! Add your first Love Deposit above.")
 else:
-    # Use st.container to apply the 'dataframe-card' class 
-    # This correctly wraps the st.dataframe in the card styling
-    with st.container():
-        st.markdown('<div class="dataframe-card">', unsafe_allow_html=True)
-        # Rename columns for display
-        display_df = st.session_state.df.sort_values("date", ascending=False).rename(columns={
-            "date": "Date & Time",
-            "contributor": "Depositor",
-            "amount": "Amount ($)"
-        })
-        # Display the dataframe 
-        st.dataframe(display_df, use_container_width=True)
-        st.markdown('</div>', unsafe_allow_html=True)
-
+    # Rename columns for display
+    display_df = st.session_state.df.sort_values("date", ascending=False).rename(columns={
+        "date": "Date & Time",
+        "contributor": "Depositor",
+        "amount": "Amount ($)"
+    })
+    st.dataframe(display_df)
 
 # --- Clear Option ---
 st.markdown("---")
