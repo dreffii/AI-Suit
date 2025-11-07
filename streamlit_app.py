@@ -3,7 +3,7 @@ import pandas as pd
 from datetime import date, datetime
 import time  # for animation
 
-st.set_page_config(page_title="Wedding Savings Tracker", page_icon="💍", layout="centered")
+st.set_page_config(page_title="Tra 💖 Da Saving", page_icon="💍", layout="centered")
 
 # --- File paths ---
 DATA_FILE = "wedding_savings.xlsx"
