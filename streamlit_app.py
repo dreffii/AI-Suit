@@ -3,7 +3,7 @@ import pandas as pd
 from datetime import date, datetime
 import time  # for animation
 
-st.set_page_config(page_title="Saving for Wedding💍", page_icon="💍", layout="centered")
+st.set_page_config(page_title="Tra 💖 Da Saving💍", page_icon="💍", layout="centered")
 
 # --- File paths ---
 DATA_FILE = "wedding_savings.xlsx"
@@ -42,7 +42,7 @@ if "goal_amount" not in st.session_state or "goal_date" not in st.session_state:
     st.session_state.goal_date = saved_date
 
 # --- UI HEADER ---
-st.markdown("<h1 style='text-align:center; color:#9A6A8D;'>Tra 💖 Da Saving💍</h1>", unsafe_allow_html=True)
+st.markdown("<h1 style='text-align:center; color:#9A6A8D;'>Saving for Wedding💍</h1>", unsafe_allow_html=True)
 
 # --- Goal Section ---
 st.subheader("1️⃣ Setup / Edit Goal")
