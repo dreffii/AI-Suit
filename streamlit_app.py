@@ -71,7 +71,8 @@ def update_progress():
 update_progress()
 
 # --- Custom Gradient Progress Bar ---
-def show_progress_bar(progress):
+# Accept placeholder as argument
+def show_progress_bar(placeholder, progress): 
     progress = max(0, min(1, progress))
     def interpolate_color(p):
         def hex_to_rgb(h):
@@ -107,11 +108,14 @@ def show_progress_bar(progress):
         '>{percent}%</div>
     </div>
     """
-    st.markdown(bar_html, unsafe_allow_html=True)
+    # Use the placeholder to replace the content
+    placeholder.markdown(bar_html, unsafe_allow_html=True) 
 
 # --- Display initial progress ---
 st.markdown(f"### ⏳ {st.session_state.days_remaining} days to go!")
-show_progress_bar(st.session_state.progress)
+# Create a placeholder for the progress bar
+progress_placeholder = st.empty() 
+show_progress_bar(progress_placeholder, st.session_state.progress) 
 balance_metric = st.empty()
 balance_metric.metric("💵 Current Balance", f"${st.session_state.current_balance:,.2f}")
 st.metric("🎯 Goal", f"${st.session_state.goal_amount:,.2f}")
@@ -124,10 +128,12 @@ def animate_progress(old_balance, new_balance):
     steps = 20
     for i in range(1, steps+1):
         interp_progress = old_progress + (new_progress - old_progress) * i / steps
-        show_progress_bar(interp_progress)
+        # Pass the placeholder to show_progress_bar
+        show_progress_bar(progress_placeholder, interp_progress) 
         balance_metric.metric("💵 Current Balance", f"${st.session_state.current_balance:,.2f}")
         time.sleep(0.02)
-    show_progress_bar(new_progress)
+    # Final state
+    show_progress_bar(progress_placeholder, new_progress)
     balance_metric.metric("💵 Current Balance", f"${st.session_state.current_balance:,.2f}")
 
 # --- Contribution Input ---
