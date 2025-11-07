@@ -1,83 +1,87 @@
 import streamlit as st
 import pandas as pd
-from datetime import date, datetime
+import os
 
-st.set_page_config(page_title="Wedding Savings Tracker", page_icon="💍", layout="centered")
+FILE_PATH = "wedding_data.xlsx"
+BUDGET_FILE = "budget_goal.txt"
 
-# --- Excel setup ---
-FILE_PATH = "wedding_savings.xlsx"
-
-# Initialize or load existing data
+# --- Load or initialize Excel data ---
 def load_data():
-    try:
-        df = pd.read_excel(FILE_PATH)
-    except FileNotFoundError:
-        df = pd.DataFrame(columns=["date", "contributor", "amount"])
-    return df
+    if os.path.exists(FILE_PATH):
+        return pd.read_excel(FILE_PATH)
+    else:
+        df = pd.DataFrame(columns=["Date", "Description", "Amount"])
+        df.to_excel(FILE_PATH, index=False)
+        return df
 
 def save_data(df):
     df.to_excel(FILE_PATH, index=False)
 
-# --- UI HEADER ---
-st.markdown("<h1 style='text-align:center; color:#9A6A8D;'>💍 Wedding Savings Tracker</h1>", unsafe_allow_html=True)
+# --- Load persistent budget goal ---
+def load_budget_goal():
+    if os.path.exists(BUDGET_FILE):
+        with open(BUDGET_FILE, "r") as f:
+            try:
+                return float(f.read().strip())
+            except ValueError:
+                return 0.0
+    return 0.0
 
-# --- Load Data ---
-df = load_data()
+def save_budget_goal(value):
+    with open(BUDGET_FILE, "w") as f:
+        f.write(str(value))
 
-# --- GOAL SECTION ---
-st.subheader("1️⃣ Setup / Edit Goal")
-goal_amount = st.number_input("💰 Total Wedding Budget Goal ($)", min_value=100.0, value=30000.0, step=100.0)
-goal_date = st.date_input("📅 Target Wedding Date", date.today().replace(year=date.today().year + 2))
+# --- Initialize session state ---
+if "data" not in st.session_state:
+    st.session_state.data = load_data()
+if "budget_goal" not in st.session_state:
+    st.session_state.budget_goal = load_budget_goal()
 
-# --- CALCULATIONS ---
-today = date.today()
-days_remaining = (goal_date - today).days
-current_balance = df["amount"].sum()
-progress = min(1.0, current_balance / goal_amount)
-remaining = max(0, goal_amount - current_balance)
+# --- UI ---
+st.title("💍 2-Year Wedding Savings Tracker")
 
-# Monthly recommendation
-months_remaining = max(1, days_remaining / 30.437)
-recommended_monthly = remaining / months_remaining
+# --- Budget goal ---
+budget_goal = st.number_input(
+    "🎯 Total Wedding Budget Goal ($)",
+    min_value=0.0,
+    value=st.session_state.budget_goal,
+    step=100.0,
+    key="budget_input"
+)
 
-# --- DISPLAY PROGRESS ---
-st.markdown(f"### ⏳ {days_remaining} days to go!")
-st.progress(progress)
-st.markdown(f"**{progress*100:.1f}% reached**")
-st.metric("💵 Current Balance", f"${current_balance:,.2f}")
-st.metric("🎯 Goal", f"${goal_amount:,.2f}")
-st.info(f"Recommended monthly save: ${recommended_monthly:,.2f}")
+if budget_goal != st.session_state.budget_goal:
+    st.session_state.budget_goal = budget_goal
+    save_budget_goal(budget_goal)
 
-# --- CONTRIBUTION INPUT ---
-st.subheader("2️⃣ Register Monthly Deposit")
-contributor = st.radio("Contributor", ["Tra 💙", "Da 💖"], horizontal=True)
-amount = st.number_input("Deposit Amount ($)", min_value=0.01, step=10.0)
-if st.button("💰 Add Deposit"):
-    new_row = pd.DataFrame({
-        "date": [datetime.now().strftime("%Y-%m-%d %H:%M:%S")],
-        "contributor": [contributor],
-        "amount": [amount]
-    })
-    df = pd.concat([df, new_row], ignore_index=True)
-    save_data(df)
-    st.success(f"Added {contributor} deposit of ${amount:,.2f}!")
+# --- Add entry ---
+st.subheader("➕ Add Transaction")
+desc = st.text_input("Description")
+amt = st.number_input("Amount ($)", step=1.0, key="amount_input")
 
-# --- CONTRIBUTION SUMMARY ---
-st.subheader("💑 Contribution Summary")
-tra_total = df[df["contributor"] == "Tra 💙"]["amount"].sum()
-da_total = df[df["contributor"] == "Da 💖"]["amount"].sum()
-col1, col2 = st.columns(2)
-col1.metric("Tra 💙 Total", f"${tra_total:,.2f}")
-col2.metric("Da 💖 Total", f"${da_total:,.2f}")
+if st.button("Add Entry"):
+    if desc and amt != 0:
+        new_entry = pd.DataFrame([[pd.Timestamp.now(), desc, amt]], columns=["Date", "Description", "Amount"])
+        st.session_state.data = pd.concat([st.session_state.data, new_entry], ignore_index=True)
+        save_data(st.session_state.data)
+        st.success("✅ Entry added!")
+    else:
+        st.warning("Please enter a description and amount.")
 
-# --- HISTORY SECTION ---
-st.subheader("3️⃣ Savings History")
-if df.empty:
-    st.info("No deposits recorded yet.")
-else:
-    st.dataframe(df.sort_values("date", ascending=False))
+# --- Current data table ---
+st.subheader("📜 Transaction History")
+st.dataframe(st.session_state.data, use_container_width=True)
 
-# --- CLEAR OPTION ---
-if st.button("🗑️ Clear All History"):
-    save_data(pd.DataFrame(columns=["date", "contributor", "amount"]))
-    st.warning("All data cleared! Refresh to start new tracking.")
+# --- Real-time calculations ---
+total_saved = st.session_state.data["Amount"].sum()
+budget_goal = st.session_state.budget_goal
+balance = budget_goal - total_saved
+
+progress = total_saved / budget_goal * 100 if budget_goal > 0 else 0
+
+# --- Display summary ---
+st.markdown(f"### 💵 Current Balance: **${balance:,.2f}**")
+st.markdown(f"### 💰 Total Saved: **${total_saved:,.2f} / ${budget_goal:,.2f}**")
+st.progress(min(progress / 100, 1.0))
+
+# --- Footer ---
+st.caption("Your data and goal are automatically saved and will persist across sessions.")
