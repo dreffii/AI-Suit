@@ -6,12 +6,12 @@ import time  # for animation
 # Set page configuration with a romantic icon
 st.set_page_config(page_title="Tra 💖 Da Saving💍", page_icon="💖", layout="centered")
 
-# --- Custom Styling for Cuteness ---
+# --- Custom Styling for Cuteness (Lighter Pink Theme) ---
 st.markdown("""
 <style>
-    /* Main App Container Styling */
+    /* Main App Container Styling - LIGHTER PINK */
     .stApp {
-        background: #FFF0F5; /* Light Lavender Blush background */
+        background: #FEF0F5; /* Very soft, light pink */
     }
     /* Main Header Styling */
     .cute-header {
@@ -27,12 +27,17 @@ st.markdown("""
         border-left: 5px solid #FFC0CB; /* Pink accent line */
         padding-left: 10px;
     }
-    /* General input/container styling */
-    .stNumberInput, .stDateInput, .stRadio, .stMetric, .stDataFrame {
-        border-radius: 10px !important;
+    /* General input/container styling - adding more defined card-like look */
+    .stNumberInput, .stDateInput, .stRadio, .stMetric, .stDataFrame, .stInfo {
+        border-radius: 12px !important;
         background-color: #FFFFFF;
         padding: 10px;
-        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        box-shadow: 0 4px 10px rgba(199, 21, 133, 0.08); /* Soft shadow based on Deep Pink */
+        margin-bottom: 15px;
+    }
+    /* Info box styling */
+    .stAlert {
+        border-radius: 12px !important;
     }
 
     /* Button Styling */
@@ -227,8 +232,9 @@ st.subheader("💑 Our Combined Love Totals")
 tra_total = st.session_state.df[st.session_state.df["contributor"] == "Tra 💙"]["amount"].sum()
 da_total = st.session_state.df[st.session_state.df["contributor"] == "Da 💖"]["amount"].sum()
 col1, col2 = st.columns(2)
-col1.metric("Tra 💙's Total", f"${tra_total:,.2f}", delta_color="off")
-col2.metric("Da 💖's Total", f"${da_total:,.2f}", delta_color="off")
+# Added Emojis to the metrics
+col1.metric("Tra 💙's Total", f"💰 ${tra_total:,.2f}", delta_color="off")
+col2.metric("Da 💖's Total", f"💐 ${da_total:,.2f}", delta_color="off")
 
 # --- Savings History (Cuter Language) ---
 st.subheader("3️⃣ Our Funding Journey")
