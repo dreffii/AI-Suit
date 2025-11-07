@@ -13,7 +13,7 @@ st.set_page_config(page_title="Tra 💖 Da Saving💍", page_icon="💖", layout
 TELEGRAM_BOT_TOKEN = "7188054455:AAFSpulklwuVqrZ84LXDnhOwv3Mi0OOf9zA" 
 # 2. Get your Chat ID by sending a message to your bot and checking the API response: 
 # https://api.telegram.org/bot<7188054455:AAFSpulklwuVqrZ84LXDnhOwv3Mi0OOf9zA>/getUpdates
-TELEGRAM_CHAT_ID = "YOUR_CHAT_ID" 
+TELEGRAM_CHAT_ID = "685555878" 
 # -----------------------------------------------------------------------
 
 # --- Telegram Notification Function ---
