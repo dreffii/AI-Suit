@@ -6,7 +6,7 @@ import time  # for animation
 # Set page configuration with a romantic icon
 st.set_page_config(page_title="Tra 💖 Da Saving💍", page_icon="💖", layout="centered")
 
-# --- Custom Styling for Cuteness (Light Lavender/White Card Theme) ---
+# --- Custom Styling for Cuteness (White Card on Light Lavender Theme) ---
 st.markdown("""
 <style>
     /* 1. Outer Background - Light Lavender/Purple */
@@ -18,10 +18,10 @@ st.markdown("""
     .main-content-card {
         background-color: #FFFFFF;
         padding: 30px;
-        border-radius: 15px;
-        box-shadow: 0 0 25px rgba(0, 0, 0, 0.1); /* Soft overall shadow */
-        max-width: 700px; 
-        margin: 0 auto; 
+        border-radius: 20px; /* Slightly larger radius for softer look */
+        box-shadow: 0 5px 30px rgba(0, 0, 0, 0.12); /* Soft, noticeable shadow */
+        max-width: 600px; /* Optimized width for centered app */
+        margin: 20px auto; 
     }
     
     /* Main Header Styling */
@@ -38,17 +38,24 @@ st.markdown("""
         border-left: 5px solid #FFC0CB; /* Pink accent line */
         padding-left: 10px;
     }
-    /* General input/container styling - now relying on shadow for depth */
+    /* General input/container styling - REMOVED internal background/shadows */
     .stNumberInput, .stDateInput, .stRadio, .stMetric, .stDataFrame, .stInfo {
         border-radius: 12px !important;
-        background-color: #F8F8FF; /* Very faint off-white background for components */
-        padding: 10px;
-        box-shadow: 0 4px 8px rgba(199, 21, 133, 0.05); /* Lighter soft shadow */
+        /* Removing inner card styling to make them blend seamlessly with the main white card */
+        background-color: transparent !important; 
+        box-shadow: none !important;
+        padding-left: 0;
+        padding-right: 0;
         margin-bottom: 15px;
     }
-    /* Info box styling */
-    .stAlert {
-        border-radius: 12px !important;
+    
+    /* Input field styling (specifically for number and date inputs) */
+    .stNumberInput > div > div > input,
+    .stDateInput > div > div > input {
+        border-radius: 8px !important;
+        border: 1px solid #FFC0CB; /* Soft border for fields */
+        padding: 10px;
+        background-color: #F8F8FF;
     }
 
     /* Button Styling */
@@ -61,6 +68,8 @@ st.markdown("""
         transition: all 0.2s ease;
         padding: 10px 20px;
         font-size: 16px;
+        width: 100%; /* Make buttons full width for clean look */
+        margin-top: 10px;
     }
     .stButton > button:hover {
         background-color: #C71585;
