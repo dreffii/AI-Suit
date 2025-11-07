@@ -42,7 +42,7 @@ if "goal_amount" not in st.session_state or "goal_date" not in st.session_state:
     st.session_state.goal_date = saved_date
 
 # --- UI HEADER ---
-st.markdown("<h1 style='text-align:center; color:#9A6A8D;'>💍 Wedding Savings Tracker</h1>", unsafe_allow_html=True)
+st.markdown("<h1 style='text-align:center; color:#9A6A8D;'>Tra 💖 Da Saving💍</h1>", unsafe_allow_html=True)
 
 # --- Goal Section ---
 st.subheader("1️⃣ Setup / Edit Goal")
