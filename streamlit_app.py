@@ -30,7 +30,7 @@ st.markdown("""
     }
     /* General input/container styling - Individual components now look like cards */
     .stNumberInput, .stDateInput, .stRadio, .stMetric, .stInfo, .stAlert,
-    .custom-card { /* <-- New class for data container */
+    .custom-card { /* <-- Class applied to st.container for data table */
         border-radius: 12px !important;
         background-color: #FFFFFF; /* White background for individual components */
         padding: 15px; /* Increased padding slightly for better card look */
@@ -63,8 +63,8 @@ st.markdown("""
     
     /* Fixing Dataframe margin inside the container to avoid double-padding */
     .stDataFrame {
-        /* Important: When .stDataFrame is inside .custom-card, we remove its internal styling
-           so the parent container handles the visual card effect. */
+        /* Important: When st.dataframe is inside the custom-card container, 
+           we remove its internal padding/border/shadow */
         padding: 0 !important; 
         box-shadow: none !important;
         border: none !important;
@@ -265,11 +265,12 @@ col2.metric("Da 💖's Total", f"💐 ${da_total:,.2f}", delta_color="off")
 
 # --- Savings History (Cuter Language) ---
 st.subheader("3️⃣ Our Funding Journey")
-# FIX: Removed the manual st.markdown tags to eliminate the empty card, and applied the custom class to st.container.
+# FIX: Apply custom-card class directly to the st.container to wrap the content without extra space.
 with st.container(border=False):
-    st.markdown('<div class="custom-card">', unsafe_allow_html=True) 
+    # Apply custom-card class using st.markdown for the container itself
+    st.markdown('<div class="custom-card">', unsafe_allow_html=True)
     if st.session_state.df.empty:
-        # Use an info box inside the card for empty state
+        # If empty, show an info message
         st.info("The journey begins! Add your first Love Deposit above.")
     else:
         # Rename columns for display
@@ -278,9 +279,9 @@ with st.container(border=False):
             "contributor": "Depositor",
             "amount": "Amount ($)"
         })
-        # The dataframe will now properly fill the custom-card div
+        # Display the dataframe inside the container
         st.dataframe(display_df, use_container_width=True)
-    st.markdown('</div>', unsafe_allow_html=True) # Close the custom-card div
+    st.markdown('</div>', unsafe_allow_html=True)
 
 # --- Clear Option ---
 st.markdown("---")
