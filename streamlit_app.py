@@ -31,7 +31,7 @@ st.markdown("""
     
     /* General input/container styling - Individual components now look like cards */
     /* NOTE: stDataFrame has been removed from this list to apply specialized styling below */
-    .stNumberInput, .stDateInput, .stRadio, .stMetric, .stInfo {
+    .stNumberInput, .stDateInput, .stRadio, .stMetric, .stInfo, .stTextInput {
         border-radius: 12px !important;
         background-color: #FFFFFF; /* White background for individual components */
         padding: 15px; /* Increased padding slightly for better card look */
@@ -88,6 +88,7 @@ st.markdown("""
 # --- File paths ---
 DATA_FILE = "wedding_savings.xlsx"
 GOAL_FILE = "wedding_goal.xlsx"
+PIN_FILE = "wedding_pin.xlsx" # New file for PIN storage
 
 # --- Load / Save Data ---
 def load_data():
@@ -117,6 +118,22 @@ def save_goal(goal_amount, goal_date):
     """Saves both goal amount and date to the goal file."""
     goal_df = pd.DataFrame({"goal_amount": [goal_amount], "goal_date": [goal_date]})
     goal_df.to_excel(GOAL_FILE, index=False)
+    
+# --- Load / Save PIN ---
+def load_pin():
+    """Loads the PIN from the PIN file."""
+    try:
+        pin_df = pd.read_excel(PIN_FILE)
+        return str(pin_df.loc[0, "pin_code"])
+    except Exception:
+        # Default PIN if file not found or corrupted (e.g., '1234')
+        return None
+
+def save_pin(pin_code):
+    """Saves the PIN to the PIN file."""
+    pin_df = pd.DataFrame({"pin_code": [pin_code]})
+    pin_df.to_excel(PIN_FILE, index=False)
+
 
 # --- Initialize session state ---
 if "df" not in st.session_state:
@@ -126,6 +143,61 @@ if "goal_amount" not in st.session_state or "goal_date" not in st.session_state:
     saved_goal, saved_date = load_goal()
     st.session_state.goal_amount = saved_goal
     st.session_state.goal_date = saved_date
+    
+if "logged_in" not in st.session_state:
+    # Set to True initially if no PIN is set, or if we need to show the setup screen
+    st.session_state.logged_in = False
+    
+# --- Authentication Logic ---
+
+def login_app():
+    # 1. Load the stored PIN
+    current_pin = load_pin()
+    
+    st.markdown("<h1 class='cute-header'>🔒 Welcome to Our Secret Fund! 💖</h1>", unsafe_allow_html=True)
+
+    if current_pin is None:
+        # --- PIN Setup Screen ---
+        st.subheader("Set Up Your Love PIN (4-digit)")
+        
+        # Use st.text_input with type='password' for hidden input
+        new_pin = st.text_input("Choose a 4-digit PIN", type="password", max_chars=4, key="new_pin_input")
+        
+        if st.button("🔐 Save PIN and Enter App"):
+            if new_pin and len(new_pin) == 4 and new_pin.isdigit():
+                save_pin(new_pin)
+                st.session_state.logged_in = True
+                st.rerun() # Rerun to start the main app content
+            else:
+                st.error("Please enter a valid 4-digit numeric PIN.")
+        
+        st.markdown("<p style='text-align: center; color: #800080; margin-top: 20px;'>*This PIN will protect access to your budget tracker.*</p>", unsafe_allow_html=True)
+        
+    else:
+        # --- PIN Login Screen ---
+        st.subheader("Enter Your Love PIN")
+        
+        # Use st.text_input with type='password' for hidden input
+        input_pin = st.text_input("Love PIN", type="password", max_chars=4, key="login_pin_input")
+        
+        if st.button("💖 Unlock Fund"):
+            if input_pin == current_pin:
+                st.session_state.logged_in = True
+                st.rerun() # Rerun to show the main app content
+            else:
+                st.error("Incorrect Love PIN. Try again!")
+        
+        st.markdown("<p style='text-align: center; color: #800080; margin-top: 20px;'>*If you forget your PIN, delete the 'wedding_pin.xlsx' file to reset.*</p>", unsafe_allow_html=True)
+    
+    # Stop execution here if not logged in
+    return False
+
+# Check authentication status
+if not st.session_state.logged_in:
+    login_app()
+    st.stop()
+    
+# --- Main Application Content (Only runs if logged_in is True) ---
 
 # --- UI HEADER (Now using the cute-header class) ---
 st.markdown("<h1 class='cute-header'>💖 Our Wedding Fund 💍</h1>", unsafe_allow_html=True)
