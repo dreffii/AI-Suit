@@ -3,7 +3,56 @@ import pandas as pd
 from datetime import date, datetime
 import time  # for animation
 
-st.set_page_config(page_title="Tra 💖 Da Saving💍", page_icon="💍", layout="centered")
+# Set page configuration with a romantic icon
+st.set_page_config(page_title="Tra 💖 Da Saving💍", page_icon="💖", layout="centered")
+
+# --- Custom Styling for Cuteness ---
+st.markdown("""
+<style>
+    /* Main App Container Styling */
+    .stApp {
+        background: #FFF0F5; /* Light Lavender Blush background */
+    }
+    /* Main Header Styling */
+    .cute-header {
+        text-align: center;
+        color: #C71585; /* Deep Pink/Medium Violet Red */
+        font-family: 'Georgia', serif;
+        padding: 10px 0 20px 0;
+        border-bottom: 3px solid #FFC0CB; /* Light Pink separator */
+    }
+    /* Subheader Styling */
+    h3 {
+        color: #800080; /* Purple for subheaders */
+        border-left: 5px solid #FFC0CB; /* Pink accent line */
+        padding-left: 10px;
+    }
+    /* General input/container styling */
+    .stNumberInput, .stDateInput, .stRadio, .stMetric, .stDataFrame {
+        border-radius: 10px !important;
+        background-color: #FFFFFF;
+        padding: 10px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    /* Button Styling */
+    .stButton > button {
+        background-color: #FFC0CB; /* Pink */
+        color: #800080; /* Purple text */
+        font-weight: bold;
+        border: 2px solid #C71585;
+        border-radius: 10px;
+        transition: all 0.2s ease;
+        padding: 10px 20px;
+        font-size: 16px;
+    }
+    .stButton > button:hover {
+        background-color: #C71585;
+        color: white;
+        transform: translateY(-2px);
+    }
+</style>
+""", unsafe_allow_html=True)
 
 # --- File paths ---
 DATA_FILE = "wedding_savings.xlsx"
@@ -47,16 +96,16 @@ if "goal_amount" not in st.session_state or "goal_date" not in st.session_state:
     st.session_state.goal_amount = saved_goal
     st.session_state.goal_date = saved_date
 
-# --- UI HEADER ---
-st.markdown("<h1 style='text-align:center; color:#9A6A8D;'>Saving for Wedding💍</h1>", unsafe_allow_html=True)
+# --- UI HEADER (Now using the cute-header class) ---
+st.markdown("<h1 class='cute-header'>💖 Our Dream Wedding Fund 💍</h1>", unsafe_allow_html=True)
 
 # --- Goal Section ---
-st.subheader("1️⃣ Setup / Edit Goal")
-goal_amount = st.number_input("💰 Total Wedding Budget Goal ($)",
+st.subheader("1️⃣ Set Our Dream Goal")
+goal_amount = st.number_input("💸 Total Dream Budget ($)",
                              min_value=100.0,
                              value=st.session_state.goal_amount,
                              step=100.0)
-goal_date = st.date_input("📅 Target Wedding Date", st.session_state.goal_date)
+goal_date = st.date_input("🗓️ Target 'I Do' Date", st.session_state.goal_date)
 
 # Save updated goal if changed (This ensures both amount and date are saved together)
 if goal_amount != st.session_state.goal_amount or goal_date != st.session_state.goal_date:
@@ -91,8 +140,8 @@ def show_progress_bar(placeholder, progress):
             return tuple(int(h[i:i+2],16) for i in (0,2,4))
         def rgb_to_hex(rgb):
             return '#%02x%02x%02x' % rgb
-        start = hex_to_rgb("#FF69B4")  # pink
-        end = hex_to_rgb("#800080")    # purple
+        start = hex_to_rgb("#FFC0CB")  # Light Pink
+        end = hex_to_rgb("#C71585")    # Deep Pink
         interp = tuple(int(start[i] + (end[i]-start[i])*p) for i in range(3))
         return rgb_to_hex(interp)
 
@@ -101,16 +150,16 @@ def show_progress_bar(placeholder, progress):
     bar_html = f"""
     <div style='
         border-radius: 12px;
-        background-color: #eee;
+        background-color: #f7f7f7;
         width: 100%;
         height: 30px;
-        border: 1px solid #ccc;
+        border: 2px solid #FFC0CB; /* Light Pink border */
         overflow: hidden;
     '>
         <div style='
             width: {percent}%;
             height: 100%;
-            background: linear-gradient(90deg, #FF69B4, {color});
+            background: linear-gradient(90deg, #FFC0CB, {color});
             text-align: center;
             line-height: 30px;
             color: white;
@@ -122,15 +171,22 @@ def show_progress_bar(placeholder, progress):
     # Use the placeholder to replace the content
     placeholder.markdown(bar_html, unsafe_allow_html=True)
 
-# --- Display initial progress ---
-st.markdown(f"### ⏳ {st.session_state.days_remaining} days to go!")
-# Create a placeholder for the progress bar
+# --- Display initial progress (Cuter Language) ---
+st.markdown(f"### 💖 {st.session_state.days_remaining} Days Until We Say 'I Do'! 🥂")
+# Check if goal is reached or date passed
+if st.session_state.remaining <= 0 and st.session_state.days_remaining >= 0:
+    st.balloons()
+    st.success("🎉 Goal Reached! Time to plan the details!")
+
 progress_placeholder = st.empty()
 show_progress_bar(progress_placeholder, st.session_state.progress)
 balance_metric = st.empty()
-balance_metric.metric("💵 Current Balance", f"${st.session_state.current_balance:,.2f}")
-st.metric("🎯 Goal", f"${st.session_state.goal_amount:,.2f}")
-st.info(f"Recommended monthly save: **${st.session_state.recommended_monthly:,.2f}**")
+balance_metric.metric("✨ Current Balance", f"${st.session_state.current_balance:,.2f}", delta_color="normal")
+st.metric("🎯 Dream Goal", f"${st.session_state.goal_amount:,.2f}")
+
+if st.session_state.remaining > 0 and st.session_state.days_remaining > 0:
+    st.info(f"💌 Suggested Monthly Love Deposit: **${st.session_state.recommended_monthly:,.2f}**")
+
 
 # --- Animate Progress Bar ---
 def animate_progress(old_balance, new_balance):
@@ -143,17 +199,17 @@ def animate_progress(old_balance, new_balance):
         show_progress_bar(progress_placeholder, interp_progress)
         # Recalculate and update the current balance metric during animation
         current_display_balance = old_balance + (new_balance - old_balance) * i / steps
-        balance_metric.metric("💵 Current Balance", f"${current_display_balance:,.2f}")
+        balance_metric.metric("✨ Current Balance", f"${current_display_balance:,.2f}")
         time.sleep(0.02)
     # Final state
     show_progress_bar(progress_placeholder, new_progress)
-    balance_metric.metric("💵 Current Balance", f"${st.session_state.current_balance:,.2f}")
+    balance_metric.metric("✨ Current Balance", f"${st.session_state.current_balance:,.2f}")
 
-# --- Contribution Input ---
-st.subheader("2️⃣ Register Monthly Deposit")
-contributor = st.radio("Contributor", ["Tra 💙", "Da 💖"], horizontal=True)
-amount = st.number_input("Deposit Amount ($)", min_value=0.01, step=10.0)
-if st.button("💰 Add Deposit"):
+# --- Contribution Input (Cuter Language) ---
+st.subheader("2️⃣ Record Our Love Deposit")
+contributor = st.radio("Who's contributing this time?", ["Tra 💙", "Da 💖"], horizontal=True)
+amount = st.number_input("Love Deposit Amount ($)", min_value=0.01, step=10.0)
+if st.button("💖 Add Love Deposit"):
     old_balance = st.session_state.current_balance
     new_row = pd.DataFrame({
         "date": [datetime.now().strftime("%Y-%m-%d %H:%M:%S")],
@@ -163,26 +219,33 @@ if st.button("💰 Add Deposit"):
     st.session_state.df = pd.concat([st.session_state.df, new_row], ignore_index=True)
     save_data(st.session_state.df)
     update_progress()
-    st.success(f"Added {contributor} deposit of ${amount:,.2f}!")
+    st.success(f"A beautiful deposit of ${amount:,.2f} added by {contributor}!")
     animate_progress(old_balance, st.session_state.current_balance)
 
-# --- Contribution Summary ---
-st.subheader("💑 Contribution Summary")
+# --- Contribution Summary (Cuter Language) ---
+st.subheader("💑 Our Combined Love Totals")
 tra_total = st.session_state.df[st.session_state.df["contributor"] == "Tra 💙"]["amount"].sum()
 da_total = st.session_state.df[st.session_state.df["contributor"] == "Da 💖"]["amount"].sum()
 col1, col2 = st.columns(2)
-col1.metric("Tra 💙 Total", f"${tra_total:,.2f}")
-col2.metric("Da 💖 Total", f"${da_total:,.2f}")
+col1.metric("Tra 💙's Total", f"${tra_total:,.2f}", delta_color="off")
+col2.metric("Da 💖's Total", f"${da_total:,.2f}", delta_color="off")
 
-# --- Savings History ---
-st.subheader("3️⃣ Savings History")
+# --- Savings History (Cuter Language) ---
+st.subheader("3️⃣ Our Funding Journey")
 if st.session_state.df.empty:
-    st.info("No deposits recorded yet.")
+    st.info("The journey begins! Add your first Love Deposit above.")
 else:
-    st.dataframe(st.session_state.df.sort_values("date", ascending=False))
+    # Rename columns for display
+    display_df = st.session_state.df.sort_values("date", ascending=False).rename(columns={
+        "date": "Date & Time",
+        "contributor": "Depositor",
+        "amount": "Amount ($)"
+    })
+    st.dataframe(display_df)
 
 # --- Clear Option ---
-if st.button("🗑️ Clear All History"):
+st.markdown("---")
+if st.button("💔 Reset Everything (Use with caution!)"):
     st.session_state.df = pd.DataFrame(columns=["date", "contributor", "amount"])
     save_data(st.session_state.df)
-    st.warning("All data cleared! Refresh to see the changes applied.")
+    st.warning("All history cleared! Please refresh the page to restart your beautiful journey.")
