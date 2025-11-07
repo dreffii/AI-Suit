@@ -22,13 +22,19 @@ def save_data(df):
 
 # --- Load / Save Goal ---
 def load_goal():
+    """Loads goal amount and date from the goal file."""
     try:
         goal_df = pd.read_excel(GOAL_FILE)
-        return float(goal_df.loc[0, "goal_amount"]), pd.to_datetime(goal_df.loc[0, "goal_date"]).date()
-    except:
+        # Ensure goal_date is read as a date object
+        goal_date = pd.to_datetime(goal_df.loc[0, "goal_date"]).date()
+        goal_amount = float(goal_df.loc[0, "goal_amount"])
+        return goal_amount, goal_date
+    except Exception:
+        # Default values if file not found or corrupted
         return 30000.0, date.today().replace(year=date.today().year + 2)
 
 def save_goal(goal_amount, goal_date):
+    """Saves both goal amount and date to the goal file."""
     goal_df = pd.DataFrame({"goal_amount": [goal_amount], "goal_date": [goal_date]})
     goal_df.to_excel(GOAL_FILE, index=False)
 
@@ -47,12 +53,12 @@ st.markdown("<h1 style='text-align:center; color:#9A6A8D;'>Saving for Wedding�
 # --- Goal Section ---
 st.subheader("1️⃣ Setup / Edit Goal")
 goal_amount = st.number_input("💰 Total Wedding Budget Goal ($)",
-                              min_value=100.0,
-                              value=st.session_state.goal_amount,
-                              step=100.0)
+                             min_value=100.0,
+                             value=st.session_state.goal_amount,
+                             step=100.0)
 goal_date = st.date_input("📅 Target Wedding Date", st.session_state.goal_date)
 
-# Save updated goal if changed
+# Save updated goal if changed (This ensures both amount and date are saved together)
 if goal_amount != st.session_state.goal_amount or goal_date != st.session_state.goal_date:
     st.session_state.goal_amount = goal_amount
     st.session_state.goal_date = goal_date
@@ -61,7 +67,13 @@ if goal_amount != st.session_state.goal_amount or goal_date != st.session_state.
 # --- Calculation Function ---
 def update_progress():
     today = date.today()
-    st.session_state.days_remaining = (st.session_state.goal_date - today).days
+    # Ensure goal_date is a date object for subtraction
+    if isinstance(st.session_state.goal_date, datetime):
+        goal_date_obj = st.session_state.goal_date.date()
+    else:
+        goal_date_obj = st.session_state.goal_date
+
+    st.session_state.days_remaining = (goal_date_obj - today).days
     st.session_state.current_balance = st.session_state.df["amount"].sum()
     st.session_state.progress = min(1.0, st.session_state.current_balance / st.session_state.goal_amount)
     st.session_state.remaining = max(0, st.session_state.goal_amount - st.session_state.current_balance)
@@ -71,8 +83,7 @@ def update_progress():
 update_progress()
 
 # --- Custom Gradient Progress Bar ---
-# Accept placeholder as argument
-def show_progress_bar(placeholder, progress): 
+def show_progress_bar(placeholder, progress):
     progress = max(0, min(1, progress))
     def interpolate_color(p):
         def hex_to_rgb(h):
@@ -84,7 +95,7 @@ def show_progress_bar(placeholder, progress):
         end = hex_to_rgb("#800080")    # purple
         interp = tuple(int(start[i] + (end[i]-start[i])*p) for i in range(3))
         return rgb_to_hex(interp)
-    
+
     color = interpolate_color(progress)
     percent = int(progress*100)
     bar_html = f"""
@@ -109,17 +120,17 @@ def show_progress_bar(placeholder, progress):
     </div>
     """
     # Use the placeholder to replace the content
-    placeholder.markdown(bar_html, unsafe_allow_html=True) 
+    placeholder.markdown(bar_html, unsafe_allow_html=True)
 
 # --- Display initial progress ---
 st.markdown(f"### ⏳ {st.session_state.days_remaining} days to go!")
 # Create a placeholder for the progress bar
-progress_placeholder = st.empty() 
-show_progress_bar(progress_placeholder, st.session_state.progress) 
+progress_placeholder = st.empty()
+show_progress_bar(progress_placeholder, st.session_state.progress)
 balance_metric = st.empty()
 balance_metric.metric("💵 Current Balance", f"${st.session_state.current_balance:,.2f}")
 st.metric("🎯 Goal", f"${st.session_state.goal_amount:,.2f}")
-st.info(f"Recommended monthly save: ${st.session_state.recommended_monthly:,.2f}")
+st.info(f"Recommended monthly save: **${st.session_state.recommended_monthly:,.2f}**")
 
 # --- Animate Progress Bar ---
 def animate_progress(old_balance, new_balance):
@@ -129,8 +140,10 @@ def animate_progress(old_balance, new_balance):
     for i in range(1, steps+1):
         interp_progress = old_progress + (new_progress - old_progress) * i / steps
         # Pass the placeholder to show_progress_bar
-        show_progress_bar(progress_placeholder, interp_progress) 
-        balance_metric.metric("💵 Current Balance", f"${st.session_state.current_balance:,.2f}")
+        show_progress_bar(progress_placeholder, interp_progress)
+        # Recalculate and update the current balance metric during animation
+        current_display_balance = old_balance + (new_balance - old_balance) * i / steps
+        balance_metric.metric("💵 Current Balance", f"${current_display_balance:,.2f}")
         time.sleep(0.02)
     # Final state
     show_progress_bar(progress_placeholder, new_progress)
@@ -172,4 +185,4 @@ else:
 if st.button("🗑️ Clear All History"):
     st.session_state.df = pd.DataFrame(columns=["date", "contributor", "amount"])
     save_data(st.session_state.df)
-    st.warning("All data cleared! Refresh to start new tracking.")
+    st.warning("All data cleared! Refresh to see the changes applied.")
