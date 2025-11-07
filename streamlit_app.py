@@ -2,6 +2,7 @@ import streamlit as st
 import pandas as pd
 from datetime import date, datetime
 import time # for animation
+import os # ADDED for file manipulation (PIN reset)
 
 # Set page configuration with a romantic icon
 st.set_page_config(page_title="Tra 💖 Da Saving💍", page_icon="💖", layout="centered")
@@ -134,6 +135,20 @@ def save_pin(pin_code):
     pin_df = pd.DataFrame({"pin_code": [pin_code]})
     pin_df.to_excel(PIN_FILE, index=False)
 
+# --- NEW: Delete PIN function ---
+def delete_pin():
+    """Deletes the PIN file to reset the PIN."""
+    try:
+        # Check if the file exists before trying to remove it
+        if os.path.exists(PIN_FILE):
+            os.remove(PIN_FILE)
+            return True
+        return False
+    except Exception as e:
+        # Log the error, but continue execution
+        print(f"Error resetting PIN file: {e}")
+        return False
+
 
 # --- Initialize session state ---
 if "df" not in st.session_state:
@@ -174,20 +189,36 @@ def login_app():
         st.markdown("<p style='text-align: center; color: #800080; margin-top: 20px;'>*This PIN will protect access to your budget tracker.*</p>", unsafe_allow_html=True)
         
     else:
-        # --- PIN Login Screen ---
-        st.subheader("Enter Your Love PIN")
+        # --- PIN Login Screen (Modified for Reset Code) ---
+        st.subheader("Enter Your Love PIN or Reset Code")
         
-        # Use st.text_input with type='password' for hidden input
-        input_pin = st.text_input("Love PIN", type="password", max_chars=4, key="login_pin_input")
+        # Increased max_chars to 6 to allow for the special reset code '330533'
+        RESET_CODE = "330533"
+        input_pin = st.text_input("Love PIN", type="password", max_chars=6, key="login_pin_input")
         
         if st.button("💖 Unlock Fund"):
-            if input_pin == current_pin:
+            
+            # 1. Check for the Special Reset Code
+            if input_pin == RESET_CODE:
+                delete_pin()
+                st.success("🔒 PIN successfully reset! Please set a new 4-digit PIN below.")
+                st.session_state.logged_in = False # Force rerender back to setup screen
+                st.rerun()
+
+            # 2. Check for Normal 4-Digit PIN Login
+            elif len(input_pin) == 4 and input_pin == current_pin:
                 st.session_state.logged_in = True
-                st.rerun() # Rerun to show the main app content
+                st.rerun() 
+            
+            # 3. Invalid Input
             else:
-                st.error("Incorrect Love PIN. Try again!")
+                st.error("Incorrect Love PIN or invalid code. Try again!")
         
-        st.markdown("<p style='text-align: center; color: #800080; margin-top: 20px;'>*If you forget your PIN, delete the 'wedding_pin.xlsx' file to reset.*</p>", unsafe_allow_html=True)
+        # Update the helper text to mention the reset code
+        st.markdown(
+            f"<p style='text-align: center; color: #800080; margin-top: 20px;'>"
+            f"*If you forget your PIN, enter the 6-digit reset code **{RESET_CODE}** above.*"
+            f"</p>", unsafe_allow_html=True)
     
     # Stop execution here if not logged in
     return False
