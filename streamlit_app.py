@@ -1,7 +1,7 @@
 import streamlit as st
 import pandas as pd
 from datetime import date, datetime
-import time  # for animation
+import time # for animation
 
 # Set page configuration with a romantic icon
 st.set_page_config(page_title="Tra 💖 Da Saving💍", page_icon="💖", layout="centered")
@@ -14,8 +14,6 @@ st.markdown("""
         background: #F5EEF8; /* Very soft lavender/purple */
     }
 
-    /* 2. Main Content Card (REMOVED: The large white area holding the app) */
-    
     /* Main Header Styling */
     .cute-header {
         text-align: center;
@@ -31,7 +29,7 @@ st.markdown("""
         padding-left: 10px;
     }
     /* General input/container styling - Individual components now look like cards */
-    .stNumberInput, .stDateInput, .stRadio, .stMetric, .stDataFrame, .stInfo {
+    .stNumberInput, .stDateInput, .stRadio, .stMetric, .stInfo, .stDataFrame {
         border-radius: 12px !important;
         background-color: #FFFFFF; /* White background for individual components */
         padding: 15px; /* Increased padding slightly for better card look */
@@ -252,7 +250,12 @@ else:
         "contributor": "Depositor",
         "amount": "Amount ($)"
     })
-    st.dataframe(display_df)
+    
+    # FIX: Wrap st.dataframe in a single column to ensure it inherits the same padding/margin 
+    # structure as the columns used for the metrics, guaranteeing alignment.
+    df_col, = st.columns([1])
+    with df_col:
+        st.dataframe(display_df, use_container_width=True)
 
 # --- Clear Option ---
 st.markdown("---")
