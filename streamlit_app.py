@@ -71,55 +71,63 @@ def update_progress():
 update_progress()
 
 # --- Custom Gradient Progress Bar ---
-def display_progress_bar(progress):
-    percent = int(progress * 100)
-    # Gradient: pink (#FF9AA2) to purple (#9A6A8D)
-    start_color = (255, 154, 162)  # pink
-    end_color = (154, 106, 141)    # purple
-    r = int(start_color[0] + (end_color[0] - start_color[0]) * progress)
-    g = int(start_color[1] + (end_color[1] - start_color[1]) * progress)
-    b = int(start_color[2] + (end_color[2] - start_color[2]) * progress)
-    color = f"rgb({r},{g},{b})"
+def show_progress_bar(progress):
+    progress = max(0, min(1, progress))
+    def interpolate_color(p):
+        def hex_to_rgb(h):
+            h = h.lstrip('#')
+            return tuple(int(h[i:i+2],16) for i in (0,2,4))
+        def rgb_to_hex(rgb):
+            return '#%02x%02x%02x' % rgb
+        start = hex_to_rgb("#FF69B4")  # pink
+        end = hex_to_rgb("#800080")    # purple
+        interp = tuple(int(start[i] + (end[i]-start[i])*p) for i in range(3))
+        return rgb_to_hex(interp)
     
+    color = interpolate_color(progress)
+    percent = int(progress*100)
     bar_html = f"""
-    <div style="background-color:#eee; border-radius:15px; padding:3px; width:100%;">
-        <div style="
-            width:{percent}%;
-            background: linear-gradient(to right, #FF9AA2, #9A6A8D);
-            background-color:{color};
-            text-align:center;
-            padding:5px 0;
-            border-radius:10px;
-            color:white;
-            font-weight:bold;">
-            {percent}%
-        </div>
+    <div style='
+        border-radius: 12px;
+        background-color: #eee;
+        width: 100%;
+        height: 30px;
+        border: 1px solid #ccc;
+        overflow: hidden;
+    '>
+        <div style='
+            width: {percent}%;
+            height: 100%;
+            background: linear-gradient(90deg, #FF69B4, {color});
+            text-align: center;
+            line-height: 30px;
+            color: white;
+            font-weight: bold;
+            transition: width 0.5s ease;
+        '>{percent}%</div>
     </div>
     """
     st.markdown(bar_html, unsafe_allow_html=True)
 
-# --- Display Progress ---
+# --- Display initial progress ---
 st.markdown(f"### ⏳ {st.session_state.days_remaining} days to go!")
-progress_placeholder = st.empty()
+show_progress_bar(st.session_state.progress)
 balance_metric = st.empty()
-display_progress_bar(st.session_state.progress)
 balance_metric.metric("💵 Current Balance", f"${st.session_state.current_balance:,.2f}")
 st.metric("🎯 Goal", f"${st.session_state.goal_amount:,.2f}")
 st.info(f"Recommended monthly save: ${st.session_state.recommended_monthly:,.2f}")
 
-# --- Animate Custom Progress Bar ---
+# --- Animate Progress Bar ---
 def animate_progress(old_balance, new_balance):
-    old_progress = min(1.0, old_balance / st.session_state.goal_amount)
-    new_progress = min(1.0, new_balance / st.session_state.goal_amount)
+    old_progress = max(0, min(1, old_balance / st.session_state.goal_amount))
+    new_progress = max(0, min(1, new_balance / st.session_state.goal_amount))
     steps = 20
-    for i in range(1, steps + 1):
+    for i in range(1, steps+1):
         interp_progress = old_progress + (new_progress - old_progress) * i / steps
-        progress_placeholder.empty()
-        display_progress_bar(interp_progress)
+        show_progress_bar(interp_progress)
         balance_metric.metric("💵 Current Balance", f"${st.session_state.current_balance:,.2f}")
         time.sleep(0.02)
-    progress_placeholder.empty()
-    display_progress_bar(new_progress)
+    show_progress_bar(new_progress)
     balance_metric.metric("💵 Current Balance", f"${st.session_state.current_balance:,.2f}")
 
 # --- Contribution Input ---
