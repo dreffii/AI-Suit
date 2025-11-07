@@ -3,9 +3,41 @@ import pandas as pd
 from datetime import date, datetime
 import time # for animation
 import os # ADDED for file manipulation (PIN reset)
+import requests # ADDED for Telegram notification
 
 # Set page configuration with a romantic icon
 st.set_page_config(page_title="Tra 💖 Da Saving💍", page_icon="💖", layout="centered")
+
+# --- Telegram Configuration (REPLACE THESE WITH YOUR ACTUAL VALUES) ---
+# 1. Get your Bot Token from BotFather on Telegram.
+TELEGRAM_BOT_TOKEN = "7188054455:AAFSpulklwuVqrZ84LXDnhOwv3Mi0OOf9zA" 
+# 2. Get your Chat ID by sending a message to your bot and checking the API response: 
+# https://api.telegram.org/bot<7188054455:AAFSpulklwuVqrZ84LXDnhOwv3Mi0OOf9zA>/getUpdates
+TELEGRAM_CHAT_ID = "YOUR_CHAT_ID" 
+# -----------------------------------------------------------------------
+
+# --- Telegram Notification Function ---
+def send_telegram_notification(message):
+    """Sends a message to the configured Telegram chat."""
+    if TELEGRAM_BOT_TOKEN == "YOUR_BOT_TOKEN" or TELEGRAM_CHAT_ID == "YOUR_CHAT_ID":
+        print("Telegram notification skipped: Please configure BOT_TOKEN and CHAT_ID.")
+        return
+
+    url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage"
+    payload = {
+        "chat_id": TELEGRAM_CHAT_ID,
+        "text": message,
+        "parse_mode": "Markdown"
+    }
+    
+    try:
+        response = requests.post(url, data=payload)
+        response.raise_for_status() # Raise exception for bad status codes
+        print(f"Telegram notification sent successfully. Status: {response.status_code}")
+    except requests.exceptions.RequestException as e:
+        # Note: In a production environment, you might log this error instead of printing.
+        print(f"Failed to send Telegram notification: {e}")
+        
 
 # --- Custom Styling for Cuteness (Floating Card on Light Lavender Theme) ---
 st.markdown("""
@@ -381,6 +413,18 @@ if st.button("💖 Add Love Deposit"):
     save_data(st.session_state.df)
     update_progress()
     st.success(f"A beautiful deposit of ${amount:,.2f} added by {contributor}!")
+    
+    # --- Telegram Notification Trigger ---
+    notification_message = (
+        f"💖 *Love Deposit Alert!* 💖\n\n"
+        f"Deposited by: {contributor}\n"
+        f"Amount: *${amount:,.2f}*\n"
+        f"Current Total: *${st.session_state.current_balance:,.2f}*\n"
+        f"Remaining Goal: *${st.session_state.remaining:,.2f}*"
+    )
+    send_telegram_notification(notification_message)
+    # ------------------------------------
+
     animate_progress(old_balance, st.session_state.current_balance)
 
 # --- Contribution Summary (Cuter Language) ---
