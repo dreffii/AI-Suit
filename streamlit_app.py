@@ -4,9 +4,14 @@ from datetime import date, datetime
 import time # for animation
 import os # ADDED for file manipulation (PIN reset)
 import requests # ADDED for Telegram notification
+import pytz # ADDED for timezone handling
 
 # Set page configuration with a romantic icon
 st.set_page_config(page_title="Tra 💖 Da Saving💍", page_icon="💖", layout="centered")
+
+# --- Timezone Configuration (Phnom Penh - Asia/Phnom_Penh is UTC+7) ---
+PHNOM_PENH_TZ = pytz.timezone('Asia/Phnom_Penh')
+# ----------------------------------------------------------------------
 
 # --- Telegram Configuration (REPLACE THESE WITH YOUR ACTUAL VALUES) ---
 # 1. Get your Bot Token from BotFather on Telegram.
@@ -211,7 +216,6 @@ def handle_login_submit(input_key, current_pin):
 
     # Check if the login state changed. If it did, the app needs to rerender 
     # (which happens automatically, but we ensure the state is marked for rerun if needed).
-    # Removing st.rerun() but keeping the state tracking might be useful for other features later.
     if st.session_state.logged_in != st.session_state.get('prev_logged_in_state', False):
         st.session_state.prev_logged_in_state = st.session_state.logged_in
         # st.rerun() removed here to clear the warning.
@@ -243,11 +247,11 @@ def login_app():
         
         # Pass the callback function to on_change
         new_pin = st.text_input("Choose a 4-digit PIN", 
-                                type="password", 
-                                max_chars=4, 
-                                key="new_pin_input",
-                                on_change=handle_login_submit,
-                                args=("new_pin_input", None)) # Pass None for current_pin during setup
+                                 type="password", 
+                                 max_chars=4, 
+                                 key="new_pin_input",
+                                 on_change=handle_login_submit,
+                                 args=("new_pin_input", None)) # Pass None for current_pin during setup
         
         if st.button("🔐 Save PIN and Enter App"):
             handle_login_submit("new_pin_input", None)
@@ -260,11 +264,11 @@ def login_app():
         
         # Pass the callback function to on_change
         input_pin = st.text_input("Love PIN", 
-                                  type="password", 
-                                  max_chars=6, 
-                                  key="login_pin_input",
-                                  on_change=handle_login_submit,
-                                  args=("login_pin_input", current_pin))
+                                     type="password", 
+                                     max_chars=6, 
+                                     key="login_pin_input",
+                                     on_change=handle_login_submit,
+                                     args=("login_pin_input", current_pin))
         
         if st.button("💖 Unlock Fund"):
             handle_login_submit("login_pin_input", current_pin)
@@ -294,9 +298,9 @@ st.markdown("<h1 class='cute-header'>💖 Our Wedding Fund 💍</h1>", unsafe_al
 # --- Goal Section ---
 st.subheader("1️⃣ Set Our Dream Goal")
 goal_amount = st.number_input("💸 Total Dream Budget ($)",
-                             min_value=100.0,
-                             value=st.session_state.goal_amount,
-                             step=100.0)
+                              min_value=100.0,
+                              value=st.session_state.goal_amount,
+                              step=100.0)
 goal_date = st.date_input("🗓️ Target 'I Do' Date", st.session_state.goal_date)
 
 # Save updated goal if changed (This ensures both amount and date are saved together)
@@ -404,8 +408,14 @@ contributor = st.radio("Who's contributing this time?", ["Tra 💙", "Da 💖"],
 amount = st.number_input("Love Deposit Amount ($)", min_value=0.01, step=10.0)
 if st.button("💖 Add Love Deposit"):
     old_balance = st.session_state.current_balance
+    
+    # --- CHANGE START: Use Phnom Penh localized time ---
+    phnom_penh_now = datetime.now(PHNOM_PENH_TZ)
+    # --- CHANGE END ---
+    
     new_row = pd.DataFrame({
-        "date": [datetime.now().strftime("%Y-%m-%d %H:%M:%S")],
+        # Record the localized time (without timezone info in the string for simplicity)
+        "date": [phnom_penh_now.strftime("%Y-%m-%d %H:%M:%S")],
         "contributor": [contributor],
         "amount": [amount]
     })
