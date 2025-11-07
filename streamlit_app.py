@@ -31,7 +31,7 @@ st.markdown("""
         padding-left: 10px;
     }
     /* General input/container styling - Individual components now look like cards */
-    .stNumberInput, .stDateInput, .stRadio, .stMetric, .stDataFrame, .stInfo {
+    .stNumberInput, .stDateInput, .stRadio, .stMetric, .stDataFrame, .stInfo, .stAlert {
         border-radius: 12px !important;
         background-color: #FFFFFF; /* White background for individual components */
         padding: 15px; /* Increased padding slightly for better card look */
@@ -39,9 +39,15 @@ st.markdown("""
         margin-bottom: 20px; /* Increased margin for separation */
         border: 1px solid #FFC0CB; /* Soft border */
     }
-    /* Info box styling */
-    .stAlert {
-        border-radius: 12px !important;
+    
+    /* Ensure metric card styling applies correctly inside columns */
+    .st-emotion-cache-16kktmt > div, /* Targets the parent div of the metric */
+    .st-emotion-cache-1f19rnc > div {
+        /* Remove internal padding/margin/border from Streamlit's metric container 
+           to let the main .stMetric class handle the visual card style */
+        padding: 0 !important; 
+        border: none !important;
+        background-color: transparent !important;
     }
 
     /* Button Styling */
@@ -106,7 +112,7 @@ if "goal_amount" not in st.session_state or "goal_date" not in st.session_state:
     st.session_state.goal_date = saved_date
 
 # --- UI HEADER (Now using the cute-header class) ---
-st.markdown("<h1 class='cute-header'>💖 Our Wedding Fund 💍</h1>", unsafe_allow_html=True)
+st.markdown("<h1 class='cute-header'>💖 Our Dream Wedding Fund 💍</h1>", unsafe_allow_html=True)
 
 # --- Goal Section ---
 st.subheader("1️⃣ Set Our Dream Goal")
@@ -190,13 +196,25 @@ if st.session_state.remaining <= 0 and st.session_state.days_remaining >= 0:
 
 progress_placeholder = st.empty()
 show_progress_bar(progress_placeholder, st.session_state.progress)
-balance_metric = st.empty()
-balance_metric.metric("✨ Current Balance", f"${st.session_state.current_balance:,.2f}", delta_color="normal")
-st.metric("🎯 Dream Goal", f"${st.session_state.goal_amount:,.2f}")
 
-if st.session_state.remaining > 0 and st.session_state.days_remaining > 0:
-    st.info(f"💌 Suggested Monthly Love Deposit: **${st.session_state.recommended_monthly:,.2f}**")
+# --- Grouping the three main metrics (Current Balance, Goal, Suggested) into 3 equal columns ---
+col_bal, col_goal, col_suggest = st.columns(3)
 
+with col_bal:
+    balance_metric = st.empty()
+    # We use empty() here to allow animation in update_progress, but the metric is displayed below
+    balance_metric.metric("✨ Current Balance", f"${st.session_state.current_balance:,.2f}", delta_color="normal")
+
+with col_goal:
+    st.metric("🎯 Dream Goal", f"${st.session_state.goal_amount:,.2f}")
+
+with col_suggest:
+    if st.session_state.remaining > 0 and st.session_state.days_remaining > 0:
+        # Use a metric to make it look like the other two cards
+        st.metric("💌 Monthly Deposit", f"${st.session_state.recommended_monthly:,.2f}")
+    else:
+        # Placeholder metric if the goal is already reached or date passed
+        st.metric("💌 Monthly Deposit", "N/A")
 
 # --- Animate Progress Bar ---
 def animate_progress(old_balance, new_balance):
@@ -238,6 +256,7 @@ tra_total = st.session_state.df[st.session_state.df["contributor"] == "Tra 💙"
 da_total = st.session_state.df[st.session_state.df["contributor"] == "Da 💖"]["amount"].sum()
 col1, col2 = st.columns(2)
 # Added Emojis to the metrics
+# The card styling is inherited via the main .stMetric CSS rule
 col1.metric("Tra 💙's Total", f"💰 ${tra_total:,.2f}", delta_color="off")
 col2.metric("Da 💖's Total", f"💐 ${da_total:,.2f}", delta_color="off")
 
