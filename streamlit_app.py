@@ -14,8 +14,6 @@ st.markdown("""
         background: #F5EEF8; /* Very soft lavender/purple */
     }
 
-    /* 2. Main Content Card (REMOVED: The large white area holding the app) */
-    
     /* Main Header Styling */
     .cute-header {
         text-align: center;
@@ -31,7 +29,8 @@ st.markdown("""
         padding-left: 10px;
     }
     /* General input/container styling - Individual components now look like cards */
-    .stNumberInput, .stDateInput, .stRadio, .stMetric, .stDataFrame, .stInfo {
+    .stNumberInput, .stDateInput, .stRadio, .stMetric, .stInfo, .stAlert,
+    .custom-card { /* <-- New class for data container */
         border-radius: 12px !important;
         background-color: #FFFFFF; /* White background for individual components */
         padding: 15px; /* Increased padding slightly for better card look */
@@ -39,11 +38,12 @@ st.markdown("""
         margin-bottom: 20px; /* Increased margin for separation */
         border: 1px solid #FFC0CB; /* Soft border */
     }
-    /* Info box styling */
-    .stAlert {
-        border-radius: 12px !important;
+    
+    /* Ensuring the Metric title/value align nicely within the card padding */
+    .stMetric > div:first-child { 
+        padding-bottom: 0;
     }
-
+    
     /* Button Styling */
     .stButton > button {
         background-color: #FFC0CB; /* Pink */
@@ -59,6 +59,14 @@ st.markdown("""
         background-color: #C71585;
         color: white;
         transform: translateY(-2px);
+    }
+    
+    /* Fixing Dataframe margin inside the container to avoid double-padding */
+    .stDataFrame {
+        padding: 0; /* Remove internal padding from st.dataframe */
+        box-shadow: none; /* Remove shadow from st.dataframe */
+        border: none; /* Remove border from st.dataframe */
+        background-color: transparent; /* Transparent background for st.dataframe */
     }
 </style>
 """, unsafe_allow_html=True)
@@ -106,7 +114,7 @@ if "goal_amount" not in st.session_state or "goal_date" not in st.session_state:
     st.session_state.goal_date = saved_date
 
 # --- UI HEADER (Now using the cute-header class) ---
-st.markdown("<h1 class='cute-header'>💖 Our Wedding Fund 💍</h1>", unsafe_allow_html=True)
+st.markdown("<h1 class='cute-header'>💖 Our Dream Wedding Fund 💍</h1>", unsafe_allow_html=True)
 
 # --- Goal Section ---
 st.subheader("1️⃣ Set Our Dream Goal")
@@ -190,13 +198,25 @@ if st.session_state.remaining <= 0 and st.session_state.days_remaining >= 0:
 
 progress_placeholder = st.empty()
 show_progress_bar(progress_placeholder, st.session_state.progress)
-balance_metric = st.empty()
-balance_metric.metric("✨ Current Balance", f"${st.session_state.current_balance:,.2f}", delta_color="normal")
-st.metric("🎯 Dream Goal", f"${st.session_state.goal_amount:,.2f}")
 
-if st.session_state.remaining > 0 and st.session_state.days_remaining > 0:
-    st.info(f"💌 Suggested Monthly Love Deposit: **${st.session_state.recommended_monthly:,.2f}**")
+# --- Grouping the three main metrics (Current Balance, Goal, Suggested) into 3 equal columns ---
+col_bal, col_goal, col_suggest = st.columns(3)
 
+with col_bal:
+    balance_metric = st.empty()
+    # We use empty() here to allow animation in update_progress, but the metric is displayed below
+    balance_metric.metric("✨ Current Balance", f"${st.session_state.current_balance:,.2f}", delta_color="normal")
+
+with col_goal:
+    st.metric("🎯 Dream Goal", f"${st.session_state.goal_amount:,.2f}")
+
+with col_suggest:
+    if st.session_state.remaining > 0 and st.session_state.days_remaining > 0:
+        # Use a metric to make it look like the other two cards
+        st.metric("💌 Monthly Deposit", f"${st.session_state.recommended_monthly:,.2f}")
+    else:
+        # Placeholder metric if the goal is already reached or date passed
+        st.metric("💌 Monthly Deposit", "N/A")
 
 # --- Animate Progress Bar ---
 def animate_progress(old_balance, new_balance):
@@ -243,16 +263,22 @@ col2.metric("Da 💖's Total", f"💐 ${da_total:,.2f}", delta_color="off")
 
 # --- Savings History (Cuter Language) ---
 st.subheader("3️⃣ Our Funding Journey")
-if st.session_state.df.empty:
-    st.info("The journey begins! Add your first Love Deposit above.")
-else:
-    # Rename columns for display
-    display_df = st.session_state.df.sort_values("date", ascending=False).rename(columns={
-        "date": "Date & Time",
-        "contributor": "Depositor",
-        "amount": "Amount ($)"
-    })
-    st.dataframe(display_df)
+# Wrapping the st.dataframe in a container to apply the custom-card styling
+with st.container(border=False):
+    st.markdown('<div class="custom-card">', unsafe_allow_html=True) # Apply the custom-card class
+    if st.session_state.df.empty:
+        # Use an info box inside the card for empty state
+        st.info("The journey begins! Add your first Love Deposit above.")
+    else:
+        # Rename columns for display
+        display_df = st.session_state.df.sort_values("date", ascending=False).rename(columns={
+            "date": "Date & Time",
+            "contributor": "Depositor",
+            "amount": "Amount ($)"
+        })
+        # Note: st.dataframe is inside the div now
+        st.dataframe(display_df, use_container_width=True)
+    st.markdown('</div>', unsafe_allow_html=True) # Close the custom-card div
 
 # --- Clear Option ---
 st.markdown("---")
