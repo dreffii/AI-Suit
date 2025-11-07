@@ -158,8 +158,7 @@ def handle_login_submit(input_key, current_pin):
         delete_pin()
         st.session_state.logged_in = False
         st.success("🔒 PIN successfully reset! Please set a new 4-digit PIN below.")
-        # Need to use a slight delay or rerun immediately for the visual change
-        # Streamlit will naturally rerun after the success message on the next interaction
+        # Note: st.rerun() is unnecessary here as a rerun is automatically scheduled after the callback.
     
     elif current_pin is None:
         # Handling initial PIN setup submission
@@ -178,11 +177,12 @@ def handle_login_submit(input_key, current_pin):
         st.error("Incorrect Love PIN or invalid code. Try again!")
         st.session_state.logged_in = False
 
-    # Force rerun if logged in status has changed (e.g., login success or pin reset)
-    # The button click usually forces a rerun, but the on_change might need it if state changes
+    # Check if the login state changed. If it did, the app needs to rerender 
+    # (which happens automatically, but we ensure the state is marked for rerun if needed).
+    # Removing st.rerun() but keeping the state tracking might be useful for other features later.
     if st.session_state.logged_in != st.session_state.get('prev_logged_in_state', False):
         st.session_state.prev_logged_in_state = st.session_state.logged_in
-        st.rerun()
+        # st.rerun() removed here to clear the warning.
 
 
 # --- Initialize session state ---
@@ -245,6 +245,8 @@ def login_app():
             f"</p>", unsafe_allow_html=True)
     
     # Stop execution here if not logged in
+    # Since we are modifying session state in the callback, a rerun is needed 
+    # to show the main content, which happens automatically after this function returns.
     return False
 
 # Check authentication status
