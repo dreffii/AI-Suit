@@ -29,8 +29,8 @@ st.markdown("""
         padding-left: 10px;
     }
     /* General input/container styling - Individual components now look like cards */
-    .stNumberInput, .stDateInput, .stRadio, .stMetric, .stInfo, .stAlert,
-    .custom-card { /* <-- Class applied to st.container for data table */
+    .stNumberInput, .stDateInput, .stRadio, .stMetric, .stInfo, .stAlert, 
+    .dataframe-card { /* Custom class for the data table container */
         border-radius: 12px !important;
         background-color: #FFFFFF; /* White background for individual components */
         padding: 15px; /* Increased padding slightly for better card look */
@@ -39,11 +39,20 @@ st.markdown("""
         border: 1px solid #FFC0CB; /* Soft border */
     }
     
-    /* Ensuring the Metric title/value align nicely within the card padding */
-    .stMetric > div:first-child { 
-        padding-bottom: 0;
+    /* FIX: Removing styling from st.dataframe's internal blocks to prevent double-boxing, 
+       as the parent container (.dataframe-card) now handles the styling. */
+    .stDataFrame {
+        padding: 0 !important;
+        border: none !important;
+        box-shadow: none !important;
+        background-color: transparent !important;
     }
-    
+
+    /* Info box styling */
+    .stAlert {
+        border-radius: 12px !important;
+    }
+
     /* Button Styling */
     .stButton > button {
         background-color: #FFC0CB; /* Pink */
@@ -59,16 +68,6 @@ st.markdown("""
         background-color: #C71585;
         color: white;
         transform: translateY(-2px);
-    }
-    
-    /* Fixing Dataframe margin inside the container to avoid double-padding */
-    .stDataFrame {
-        /* Important: When st.dataframe is inside the custom-card container, 
-           we remove its internal padding/border/shadow */
-        padding: 0 !important; 
-        box-shadow: none !important;
-        border: none !important;
-        background-color: transparent !important;
     }
 </style>
 """, unsafe_allow_html=True)
@@ -265,23 +264,23 @@ col2.metric("Da 💖's Total", f"💐 ${da_total:,.2f}", delta_color="off")
 
 # --- Savings History (Cuter Language) ---
 st.subheader("3️⃣ Our Funding Journey")
-# FIX: Apply custom-card class directly to the st.container to wrap the content without extra space.
-with st.container(border=False):
-    # Apply custom-card class using st.markdown for the container itself
-    st.markdown('<div class="custom-card">', unsafe_allow_html=True)
-    if st.session_state.df.empty:
-        # If empty, show an info message
-        st.info("The journey begins! Add your first Love Deposit above.")
-    else:
+if st.session_state.df.empty:
+    st.info("The journey begins! Add your first Love Deposit above.")
+else:
+    # Use st.container to apply the 'dataframe-card' class 
+    # This correctly wraps the st.dataframe in the card styling
+    with st.container():
+        st.markdown('<div class="dataframe-card">', unsafe_allow_html=True)
         # Rename columns for display
         display_df = st.session_state.df.sort_values("date", ascending=False).rename(columns={
             "date": "Date & Time",
             "contributor": "Depositor",
             "amount": "Amount ($)"
         })
-        # Display the dataframe inside the container
+        # Display the dataframe 
         st.dataframe(display_df, use_container_width=True)
-    st.markdown('</div>', unsafe_allow_html=True)
+        st.markdown('</div>', unsafe_allow_html=True)
+
 
 # --- Clear Option ---
 st.markdown("---")
